@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 function ClientsDynamicTable() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [disableInsert, setDisableInsert] = useState(true); // 🔹 Insert button initially disabled
 
   // =====================
   // Fetch clients
@@ -19,9 +20,11 @@ function ClientsDynamicTable() {
   }, []);
 
   // =====================
-  // Insert test client
+  // Insert test client (Optional)
   // =====================
   const insertClient = async () => {
+    if (disableInsert) return; // Button disabled → prevent insert
+
     await fetch("http://localhost:3000/clients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -43,7 +46,7 @@ function ClientsDynamicTable() {
       }),
     });
 
-    fetchClients(); // 🔥 instant refresh
+    fetchClients(); // instant refresh
   };
 
   if (loading) return <p>Loading...</p>;
@@ -62,9 +65,7 @@ function ClientsDynamicTable() {
         : addr.address.Add_State,
     }))
   );
-  
 
- 
   return (
     <div
       style={{
@@ -74,23 +75,32 @@ function ClientsDynamicTable() {
         minHeight: "100vh",
       }}
     >
-      <h2 style={{ color: "#333", marginBottom: 15 }}>Customers ({rows.length})</h2>
-      
+      <h2 style={{ color: "#333", marginBottom: 15 }}>
+        Customers ({rows.length})
+      </h2>
+
+      {/* 🔹 Insert Client button */}
       <button
         onClick={insertClient}
+        disabled={disableInsert} // 🔹 Disable to prevent accidental inserts
         style={{
-          backgroundColor: "#4CAF50",
+          backgroundColor: disableInsert ? "#a0a0a0" : "#4CAF50",
           color: "white",
           padding: "10px 20px",
           border: "none",
           borderRadius: 5,
-          cursor: "pointer",
+          cursor: disableInsert ? "not-allowed" : "pointer",
           transition: "background-color 0.3s",
+          marginBottom: 20,
         }}
-        onMouseEnter={(e) => (e.target.style.backgroundColor = "#45a049")}
-        onMouseLeave={(e) => (e.target.style.backgroundColor = "#4CAF50")}
+        onMouseEnter={(e) =>
+          !disableInsert && (e.target.style.backgroundColor = "#45a049")
+        }
+        onMouseLeave={(e) =>
+          !disableInsert && (e.target.style.backgroundColor = "#4CAF50")
+        }
       >
-        Insert Client
+        Insert Client (Disabled for Safety)
       </button>
 
       <table
@@ -120,9 +130,12 @@ function ClientsDynamicTable() {
                 backgroundColor: i % 2 === 0 ? "#ffffff" : "#f2f2f2",
                 transition: "background-color 0.3s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#d9f2d9")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#d9f2d9")
+              }
               onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = i % 2 === 0 ? "#ffffff" : "#f2f2f2")
+                (e.currentTarget.style.backgroundColor =
+                  i % 2 === 0 ? "#ffffff" : "#f2f2f2")
               }
             >
               <td>{r.name}</td>
@@ -137,4 +150,5 @@ function ClientsDynamicTable() {
     </div>
   );
 }
+
 export default ClientsDynamicTable;
