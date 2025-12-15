@@ -4,6 +4,8 @@ function ClientsDynamicTable() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [disableInsert, setDisableInsert] = useState(true); // 🔹 Insert button initially disabled
+  const [searchId, setSearchId] = useState("");
+
 
   // =====================
   // Fetch clients
@@ -18,6 +20,29 @@ function ClientsDynamicTable() {
   useEffect(() => {
     fetchClients();
   }, []);
+  
+
+    // ✅ CARD STYLES
+  const cardStyle = {
+    flex: 1,
+    backgroundColor: "#ffffff",
+    padding: "16px",
+    borderRadius: "10px",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
+    textAlign: "center",
+  };
+
+  const cardTitle = {
+    fontSize: "14px",
+    color: "#777",
+    marginBottom: "6px",
+  };
+
+  const cardValue = {
+    fontSize: "26px",
+    fontWeight: "bold",
+    color: "#4CAF50",
+  };
 
   // =====================
   // Insert test client (Optional)
@@ -53,6 +78,7 @@ function ClientsDynamicTable() {
 
   const rows = data.flatMap((item) =>
     item.addresses.map((addr) => ({
+      clientId: item.client.PTY_ID,
       name: `${item.client.PTY_FirstName || ""} ${
         item.client.PTY_LastName || ""
       }`,
@@ -65,6 +91,9 @@ function ClientsDynamicTable() {
         : addr.address.Add_State,
     }))
   );
+  const filteredRows = rows.filter((r) =>
+  r.clientId?.toLowerCase().includes(searchId.toLowerCase())
+);
 
   return (
     <div
@@ -75,9 +104,11 @@ function ClientsDynamicTable() {
         minHeight: "100vh",
       }}
     >
+      
       <h2 style={{ color: "#333", marginBottom: 15 }}>
-        Customers ({rows.length})
+      Customers ({filteredRows.length} / {rows.length})
       </h2>
+
 
       {/* 🔹 Insert Client button */}
       <button
@@ -89,7 +120,7 @@ function ClientsDynamicTable() {
           padding: "10px 20px",
           border: "none",
           borderRadius: 5,
-          cursor: disableInsert ? "not-allowed" : "pointer",
+          cursor: disableInsert || rows.length === 0 ? "not-allowed" : "pointer",
           transition: "background-color 0.3s",
           marginBottom: 20,
         }}
@@ -102,50 +133,109 @@ function ClientsDynamicTable() {
       >
         Insert Client (Disabled for Safety)
       </button>
+      <input
+  type="text"
+  placeholder="Search by Client ID..."
+  value={searchId}
+  onChange={(e) => setSearchId(e.target.value)}
+  style={{
+    padding: "8px 12px",
+    width: "250px",
+    marginBottom: "15px",
+    display: "block",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+  }}
+ />
+    <div
+  style={{
+    display: "flex",
+    gap: "16px",
+    marginBottom: "20px",
+  }}
+ >
+  <div style={cardStyle}>
+    <div style={cardTitle}>Total Clients</div>
+    <div style={cardValue}>{rows.length}</div>
+  </div>
+
+  <div style={cardStyle}>
+    <div style={cardTitle}>Unique Cities</div>
+    <div style={cardValue}>
+      {[...new Set(rows.map(r => r.city))].length}
+    </div>
+  </div>
+
+  <div style={cardStyle}>
+    <div style={cardTitle}>States Covered</div>
+    <div style={cardValue}>
+      {[...new Set(rows.map(r => r.state))].length}
+    </div>
+  </div>
+</div>
 
       <table
-        border="0"
-        cellPadding="10"
-        style={{
-          marginTop: 20,
-          width: "100%",
-          borderCollapse: "collapse",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        }}
-      >
+  cellPadding="12"
+  style={{
+    width: "100%",
+    borderCollapse: "collapse",
+    backgroundColor: "#fff",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    borderRadius: "8px",
+    overflow: "hidden",
+  }}
+>
+
         <thead>
-          <tr style={{ backgroundColor: "#4CAF50", color: "white" }}>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Address</th>
-            <th>City</th>
-            <th>State</th>
-          </tr>
+        <tr style={{ backgroundColor: "#4CAF50", color: "white" }}>
+        <th style={{ textAlign: "left", padding: "12px" }}>Client ID</th>
+        <th style={{ textAlign: "left", padding: "12px" }}>Name</th>
+        <th style={{ textAlign: "left", padding: "12px" }}>Phone</th>
+        <th style={{ textAlign: "left", padding: "12px" }}>Address</th>
+        <th style={{ textAlign: "left", padding: "12px" }}>City</th>
+        <th style={{ textAlign: "left", padding: "12px" }}>State</th>
+        </tr>
         </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr
-              key={i}
-              style={{
-                backgroundColor: i % 2 === 0 ? "#ffffff" : "#f2f2f2",
-                transition: "background-color 0.3s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = "#d9f2d9")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  i % 2 === 0 ? "#ffffff" : "#f2f2f2")
-              }
-            >
-              <td>{r.name}</td>
-              <td>{r.phone}</td>
-              <td>{r.address}</td>
-              <td>{r.city}</td>
-              <td>{r.state}</td>
-            </tr>
-          ))}
-        </tbody>
+
+       <tbody>
+        {filteredRows.length === 0 && (
+  <tr>
+    <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
+      No records found
+    </td>
+  </tr>
+)}
+
+       {/*{rows.map((r, i) => (*/}
+        {filteredRows.map((r, i) => (
+
+      <tr
+      key={i}
+      style={{
+        backgroundColor: i % 2 === 0 ? "#ffffff" : "#f9f9f9",
+      }}
+       >
+      <td style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
+        {r.clientId}
+      </td>
+      <td style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
+        {r.name}
+      </td>
+      <td style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
+        {r.phone}
+      </td>
+      <td style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
+        {r.address}
+      </td>
+      <td style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
+        {r.city}
+      </td>
+      <td style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
+        {r.state}
+      </td>
+    </tr>
+  ))}
+</tbody>
       </table>
     </div>
   );
